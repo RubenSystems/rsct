@@ -1,4 +1,6 @@
-use std::{sync::atomic::{AtomicU8, Ordering}, net::SocketAddr};
+use std::sync::atomic::{AtomicU8, Ordering};
+use crate::client::Client;
+use std::hash::{Hash, Hasher};
 
 pub const MTU: usize = 1500;
 static mut CURRENT_PACKET_INDEX: AtomicU8 = AtomicU8::new(0);
@@ -25,7 +27,7 @@ pub const PACKET_SIZE: usize = std::mem::size_of::<Packet>();
 pub struct PacketContainer { 
     pub packet: Packet, 
     pub packet_data_size: usize,
-    pub from_address: Option<SocketAddr>
+    pub from: Option<Client>
 }
 
 
@@ -45,7 +47,7 @@ impl PacketContainer {
     
             },
             packet_data_size: 0,
-            from_address: None
+            from: None
         }
     }
 
@@ -57,4 +59,14 @@ impl PacketContainer {
     pub fn next(&mut self) {
         self.packet.header.index += 1;
     } 
+}
+
+impl Hash for PacketContainer {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        if let Some(from) = &self.from {
+            from.hash(state);
+        }
+        
+        self.packet.header.client_tied_id.hash(state);
+    }
 }
