@@ -3,8 +3,7 @@ use crate::packet::{PacketContainer, MAX_DATA_SIZE};
 use lru::LruCache;
 use std::num::NonZeroUsize;
 
-
-const REASSEMBLER_SIZE : usize = 10;
+const REASSEMBLER_SIZE: usize = 10;
 
 struct PacketStore {
     data: Vec<u8>,
@@ -24,8 +23,7 @@ impl PacketStore {
             copied_bytes: from.packet_data_size,
         };
         let offset = from.packet.header.index as usize * MAX_DATA_SIZE;
-        store.data[(offset)..(offset + MAX_DATA_SIZE)]
-            .copy_from_slice(&from.packet.data);
+        store.data[(offset)..(offset + MAX_DATA_SIZE)].copy_from_slice(&from.packet.data);
         store
     }
 
@@ -33,8 +31,7 @@ impl PacketStore {
         self.packet_count += 1;
         self.copied_bytes += packet.packet_data_size;
         let offset = packet.packet.header.index as usize * MAX_DATA_SIZE;
-        self.data[offset..(offset + MAX_DATA_SIZE)]
-            .copy_from_slice(&packet.packet.data);
+        self.data[offset..(offset + MAX_DATA_SIZE)].copy_from_slice(&packet.packet.data);
     }
 
     pub fn is_complete(&self) -> bool {
@@ -47,38 +44,37 @@ pub struct Reassembler {
 }
 
 pub enum ReassemblerResult {
-    NotComplete, 
-    Complete(Option<Client>, Vec<u8>)
+    NotComplete,
+    Complete(Option<Client>, Vec<u8>),
 }
 
 impl Reassembler {
-
     pub fn new() -> Reassembler {
-        Reassembler { 
-            store: LruCache::new(NonZeroUsize::new(REASSEMBLER_SIZE).unwrap())
+        Reassembler {
+            store: LruCache::new(NonZeroUsize::new(REASSEMBLER_SIZE).unwrap()),
         }
     }
 
     pub fn add(&mut self, packet: PacketContainer) -> ReassemblerResult {
         let id = packet.informal_id();
         println!("{id}");
-        
+
         let packet_store = if let Some(pkt_store) = self.store.pop(&id) {
             let mut pkt_store = pkt_store;
             pkt_store.add(packet);
             pkt_store
         } else {
             PacketStore::new(packet)
-                                                                
         };
-        
+
         if packet_store.is_complete() {
-            ReassemblerResult::Complete(packet_store.from, packet_store.data[..packet_store.copied_bytes].to_vec())
+            ReassemblerResult::Complete(
+                packet_store.from,
+                packet_store.data[..packet_store.copied_bytes].to_vec(),
+            )
         } else {
             self.store.push(id, packet_store);
             ReassemblerResult::NotComplete
         }
-        
     }
-
 }

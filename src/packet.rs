@@ -56,7 +56,12 @@ impl PacketContainer {
 
     pub fn informal_id(&self) -> String {
         if let Some(from) = &self.from {
-            format!("{}:{}-{}", from.ip_string(), from.port_string(), self.packet.header.client_tied_id)
+            format!(
+                "{}:{}-{}",
+                from.ip_string(),
+                from.port_string(),
+                self.packet.header.client_tied_id
+            )
         } else {
             format!("-{}", self.packet.header.client_tied_id)
         }
@@ -77,6 +82,7 @@ impl Eq for PacketContainer {}
 
 impl PartialEq for PacketContainer {
     fn eq(&self, other: &Self) -> bool {
-        self.from == other.from && self.packet.header.client_tied_id == other.packet.header.client_tied_id
+        self.from == other.from
+            && self.packet.header.client_tied_id == other.packet.header.client_tied_id
     }
 }
