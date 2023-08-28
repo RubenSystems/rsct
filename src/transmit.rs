@@ -24,9 +24,12 @@ async fn transmit_packet(
     socket: &UdpSocket,
     destination: &SocketAddr,
 ) {
-    let message: *const u8 = &packet_container.packet as *const _ as *const u8;
-    let struct_bytes =
-        unsafe { std::slice::from_raw_parts(message, std::mem::size_of::<Packet>()) };
+
+    let struct_bytes: &[u8] = unsafe {
+        let packet_ref = &packet_container.packet;
+        let message: *const Packet = packet_ref;
+        std::slice::from_raw_parts(message as *const u8, std::mem::size_of::<Packet>())
+    };
 
     socket
         .send_to(
