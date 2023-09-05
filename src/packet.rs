@@ -7,9 +7,9 @@ static mut CURRENT_PACKET_INDEX: AtomicU8 = AtomicU8::new(0);
 
 #[repr(C)]
 pub struct PacketHeader {
-    pub index: u8,
+    pub index: u16,
     pub client_tied_id: u8,
-    pub total: u8,
+    pub total: u16,
 }
 
 pub const PACKET_HEADER_SIZE: usize = std::mem::size_of::<PacketHeader>();

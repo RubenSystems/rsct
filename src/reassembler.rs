@@ -57,7 +57,6 @@ impl Reassembler {
 
     pub fn add(&mut self, packet: PacketContainer) -> ReassemblerResult {
         let id = packet.informal_id();
-        println!("{id}");
 
         let packet_store = if let Some(pkt_store) = self.store.pop(&id) {
             let mut pkt_store = pkt_store;
