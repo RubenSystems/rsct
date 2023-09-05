@@ -30,7 +30,7 @@ pub struct PacketContainer {
 }
 
 impl PacketContainer {
-    pub fn new(total_packet_count: u8) -> PacketContainer {
+    pub fn new(total_packet_count: u16) -> PacketContainer {
         PacketContainer {
             packet: Packet {
                 header: PacketHeader {

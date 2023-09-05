@@ -8,7 +8,7 @@ const REASSEMBLER_SIZE: usize = 10;
 struct PacketStore {
     data: Vec<u8>,
     from: Option<Client>,
-    required_size: u8,
+    required_size: u16,
     packet_count: usize,
     copied_bytes: usize,
 }

@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use tokio::net::UdpSocket;
 
 pub async fn transmit(data: &[u8], socket: &UdpSocket, destination: &SocketAddr) {
-    let mut pack = PacketContainer::new((data.len() / MAX_DATA_SIZE) as u8 + 1);
+    let mut pack = PacketContainer::new((data.len() / MAX_DATA_SIZE) as u16 + 1);
 
     for offset in (0..data.len()).step_by(MAX_DATA_SIZE) {
         let size: usize = (data.len() - offset).min(MAX_DATA_SIZE);
