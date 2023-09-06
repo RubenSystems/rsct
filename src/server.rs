@@ -4,7 +4,6 @@ use tokio::net::UdpSocket;
 pub struct Server {
     socket: UdpSocket,
     reassembler: reassembler::Reassembler,
-    listening: bool,
 }
 
 // Internals
@@ -15,7 +14,6 @@ impl Server {
         Server {
             socket,
             reassembler: reassembler::Reassembler::new(),
-            listening: false,
         }
     }
 }
@@ -28,23 +26,8 @@ impl Server {
 }
 
 impl Server {
-    pub async fn start_listener(
-        &mut self,
-        callback: impl Fn(Option<client::Client>, Vec<u8>) -> (),
-    ) {
-        self.listening = true;
-        while self.listening {
-            let packet = recieve_once(&self.socket).await;
-            match self.reassembler.add(packet) {
-                reassembler::ReassemblerResult::Complete(from, data) => {
-                    callback(from, data);
-                }
-                reassembler::ReassemblerResult::NotComplete => continue,
-            }
-        }
-    }
-
-    pub fn stop_listener(&mut self) {
-        self.listening = false;
+    pub async fn recieve_once(&mut self) -> reassembler::ReassemblerResult {
+        let packet = recieve_once(&self.socket).await;
+        self.reassembler.add(packet)
     }
 }
