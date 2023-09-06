@@ -1,4 +1,9 @@
-use crate::{client, reassembler, recieve::recieve_once, transmit};
+use crate::{
+    client::{self, Client},
+    reassembler,
+    recieve::recieve_once,
+    transmit,
+};
 use tokio::net::UdpSocket;
 
 pub struct Server {
@@ -26,8 +31,13 @@ impl Server {
 }
 
 impl Server {
-    pub async fn recieve_once(&mut self) -> reassembler::ReassemblerResult {
-        let packet = recieve_once(&self.socket).await;
-        self.reassembler.add(packet)
+    pub async fn recieve_once(&mut self) -> (Option<Client>, Vec<u8>) {
+        loop {
+            let packet = recieve_once(&self.socket).await;
+            match self.reassembler.add(packet) {
+                reassembler::ReassemblerResult::Complete(cli, dat) => return (cli, dat),
+                _ => continue,
+            }
+        }
     }
 }
