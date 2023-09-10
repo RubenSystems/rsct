@@ -29,13 +29,21 @@ pub struct PacketContainer {
     pub from: Option<Client>,
 }
 
+pub fn generate_client_tied_uid() -> u8 {
+    unsafe { CURRENT_PACKET_INDEX.fetch_add(1, Ordering::SeqCst) }
+}
+
 impl PacketContainer {
-    pub fn new(total_packet_count: u16, index: u16) -> PacketContainer {
+    pub fn new(total_packet_count: u16, index: u16) -> Self {
+        Self::new_with_fixed_client_uid(total_packet_count, index, generate_client_tied_uid())
+    }
+
+    pub fn new_with_fixed_client_uid(total_packet_count: u16, index: u16, client_tied_id: u8) -> Self {
         PacketContainer {
             packet: Packet {
                 header: PacketHeader {
                     index,
-                    client_tied_id: unsafe { CURRENT_PACKET_INDEX.fetch_add(1, Ordering::SeqCst) },
+                    client_tied_id,
                     total: total_packet_count,
                 },
                 data: [0u8; MAX_DATA_SIZE],

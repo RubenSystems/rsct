@@ -1,7 +1,8 @@
-use crate::packet::{Packet, PacketContainer, MAX_DATA_SIZE, PACKET_HEADER_SIZE};
+use crate::packet::{Packet, PacketContainer, MAX_DATA_SIZE, PACKET_HEADER_SIZE, generate_client_tied_uid};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::UdpSocket;
+
 
 pub async fn transmit(data: &[u8], socket: &UdpSocket, destination: &SocketAddr) {
     let mut pack = PacketContainer::new((data.len() / MAX_DATA_SIZE) as u16 + 1, 0);
@@ -22,20 +23,29 @@ pub async fn transmit_concurrently(
     destination: Arc<SocketAddr>,
     runtime: &tokio::runtime::Runtime,
 ) {
-
+    let mut handles = Vec::new();
     let total_packet_count = (data.len() / MAX_DATA_SIZE) as u16 + 1;
+    let client_tied_id = generate_client_tied_uid();
+
     for (index, offset) in (0..data.len()).step_by(MAX_DATA_SIZE).enumerate() {
         let size: usize = (data.len() - offset).min(MAX_DATA_SIZE);
         let mut data_slice = [0u8; MAX_DATA_SIZE];
 
         data_slice[..size].copy_from_slice(&data[offset..(offset + size)]);
-        let mut pack = PacketContainer::new(total_packet_count, index as u16);
+        let mut pack = PacketContainer::new_with_fixed_client_uid(total_packet_count, index as u16, client_tied_id);
         let sock_ref = Arc::clone(&socket);
         let sock_dest = Arc::clone(&destination);
-        // runtime.spawn(async move {
+        let handle = runtime.spawn(async move {
             pack.move_data_to(data_slice);
             transmit_packet(&pack, &sock_ref, &sock_dest).await;
-        // });
+        });
+
+        handles.push(handle);
+    }
+
+    
+    for handle in handles {
+        handle.await.expect("PACKET SEND TASK PANICED");
     }
 }
 
@@ -49,6 +59,7 @@ async fn transmit_packet(
         let message: *const Packet = packet_ref;
         std::slice::from_raw_parts(message as *const u8, std::mem::size_of::<Packet>())
     };
+
 
     socket
         .send_to(
