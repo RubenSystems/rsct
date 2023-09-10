@@ -34,7 +34,7 @@ impl PacketContainer {
         PacketContainer {
             packet: Packet {
                 header: PacketHeader {
-                    index: index,
+                    index,
                     client_tied_id: unsafe { CURRENT_PACKET_INDEX.fetch_add(1, Ordering::SeqCst) },
                     total: total_packet_count,
                 },
