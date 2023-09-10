@@ -1,9 +1,13 @@
+
+
 use crate::packet::{Packet, PacketContainer, MAX_DATA_SIZE, PACKET_HEADER_SIZE};
 use std::net::SocketAddr;
 use tokio::net::UdpSocket;
+use std::sync::Arc;
+
 
 pub async fn transmit(data: &[u8], socket: &UdpSocket, destination: &SocketAddr) {
-    let mut pack = PacketContainer::new((data.len() / MAX_DATA_SIZE) as u16 + 1);
+    let mut pack = PacketContainer::new((data.len() / MAX_DATA_SIZE) as u16 + 1, 0);
 
     for offset in (0..data.len()).step_by(MAX_DATA_SIZE) {
         let size: usize = (data.len() - offset).min(MAX_DATA_SIZE);
@@ -12,6 +16,26 @@ pub async fn transmit(data: &[u8], socket: &UdpSocket, destination: &SocketAddr)
         transmit_packet(&pack, socket, destination).await;
 
         pack.next();
+    }
+}
+
+pub async fn transmit_concurrently(
+    data: &[u8],
+    socket: Arc<UdpSocket>,
+    destination: Arc<SocketAddr>,
+    runtime: &tokio::runtime::Runtime,
+) {
+    for (index, offset) in (0..data.len()).step_by(MAX_DATA_SIZE).enumerate() {
+        let size: usize = (data.len() - offset).min(MAX_DATA_SIZE);
+        let mut data_slice = [0u8; MAX_DATA_SIZE];
+        data_slice[..data.len()].copy_from_slice(&data[offset..(offset + size)]);
+        let mut pack = PacketContainer::new((data.len() / MAX_DATA_SIZE) as u16 + 1, index as u16);
+        let sock_ref = Arc::clone(&socket);
+        let sock_dest = Arc::clone(&destination);
+        runtime.spawn(async move {
+            pack.move_data_to(data_slice);
+            transmit_packet(&pack, &sock_ref, &sock_dest).await;
+        });
     }
 }
 

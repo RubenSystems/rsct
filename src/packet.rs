@@ -2,7 +2,7 @@ use crate::client::Client;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU8, Ordering};
 
-pub const MTU: usize = 1500;
+pub const MTU: usize = 1460;
 static mut CURRENT_PACKET_INDEX: AtomicU8 = AtomicU8::new(0);
 
 #[repr(C)]
@@ -30,11 +30,11 @@ pub struct PacketContainer {
 }
 
 impl PacketContainer {
-    pub fn new(total_packet_count: u16) -> PacketContainer {
+    pub fn new(total_packet_count: u16, index: u16) -> PacketContainer {
         PacketContainer {
             packet: Packet {
                 header: PacketHeader {
-                    index: 0,
+                    index: index,
                     client_tied_id: unsafe { CURRENT_PACKET_INDEX.fetch_add(1, Ordering::SeqCst) },
                     total: total_packet_count,
                 },
@@ -48,6 +48,11 @@ impl PacketContainer {
     pub fn copy_data_to(&mut self, data: &[u8]) {
         self.packet_data_size = data.len();
         self.packet.data[..data.len()].copy_from_slice(data);
+    }
+
+    pub fn move_data_to(&mut self, data: [u8; MAX_DATA_SIZE]) {
+        self.packet_data_size = data.len();
+        self.packet.data = data;
     }
 
     pub fn next(&mut self) {

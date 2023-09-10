@@ -4,10 +4,11 @@ use crate::{
     recieve::recieve_once,
     transmit,
 };
+use std::sync::Arc;
 use tokio::net::UdpSocket;
 
 pub struct Server {
-    socket: UdpSocket,
+    socket: Arc<UdpSocket>,
     reassembler: reassembler::Reassembler,
 }
 
@@ -17,7 +18,7 @@ impl Server {
         let socket = UdpSocket::bind(format!("{}:{}", ip, port)).await.unwrap();
 
         Server {
-            socket,
+            socket: Arc::new(socket),
             reassembler: reassembler::Reassembler::new(),
         }
     }
@@ -27,6 +28,10 @@ impl Server {
 impl Server {
     pub async fn transmit(&self, data: &[u8], dest: &client::Client) {
         transmit::transmit(data, &self.socket, &dest.address()).await;
+    }
+
+    pub async fn transmit_concurrently(&self, data: &[u8], dest: client::Client, runtime: &tokio::runtime::Runtime) {
+        transmit::transmit_concurrently(data, Arc::clone(&self.socket), Arc::new(dest.address()), runtime).await;
     }
 }
 
