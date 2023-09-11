@@ -3,7 +3,7 @@ use crate::packet::{PacketContainer, MAX_DATA_SIZE};
 use lru::LruCache;
 use std::num::NonZeroUsize;
 
-const REASSEMBLER_SIZE: usize = 10;
+const REASSEMBLER_SIZE: usize = 3;
 
 struct PacketStore {
     data: Vec<u8>,
