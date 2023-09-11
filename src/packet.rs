@@ -30,12 +30,12 @@ pub struct PacketContainer {
 }
 
 pub fn generate_client_tied_uid() -> u8 {
-    unsafe { CURRENT_PACKET_INDEX.fetch_add(1, Ordering::SeqCst) }
+    unsafe { CURRENT_PACKET_INDEX.fetch_add(1, Ordering::Relaxed) }
 }
 
 impl PacketContainer {
-    pub fn new(total_packet_count: u16, index: u16) -> Self {
-        Self::new_with_fixed_client_uid(total_packet_count, index, generate_client_tied_uid())
+    pub fn new(total_packet_count: u16) -> Self {
+        Self::new_with_fixed_client_uid(total_packet_count, 0, generate_client_tied_uid())
     }
 
     pub fn new_with_fixed_client_uid(total_packet_count: u16, index: u16, client_tied_id: u8) -> Self {
@@ -56,11 +56,6 @@ impl PacketContainer {
     pub fn copy_data_to(&mut self, data: &[u8]) {
         self.packet_data_size = data.len();
         self.packet.data[..data.len()].copy_from_slice(data);
-    }
-
-    pub fn move_data_to(&mut self, data: [u8; MAX_DATA_SIZE]) {
-        self.packet_data_size = data.len();
-        self.packet.data = data;
     }
 
     pub fn next(&mut self) {

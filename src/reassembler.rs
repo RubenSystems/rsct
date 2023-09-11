@@ -67,9 +67,11 @@ impl Reassembler {
         };
 
         if packet_store.is_complete() {
+            self.store.clear();
             ReassemblerResult::Complete(
                 packet_store.from,
                 packet_store.data[..packet_store.copied_bytes].to_vec(),
+                
             )
         } else {
             self.store.push(id, packet_store);

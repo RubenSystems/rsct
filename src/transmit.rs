@@ -5,7 +5,7 @@ use tokio::net::UdpSocket;
 
 
 pub async fn transmit(data: &[u8], socket: &UdpSocket, destination: &SocketAddr) {
-    let mut pack = PacketContainer::new((data.len() / MAX_DATA_SIZE) as u16 + 1, 0);
+    let mut pack = PacketContainer::new((data.len() / MAX_DATA_SIZE) as u16 + 1);
 
     for offset in (0..data.len()).step_by(MAX_DATA_SIZE) {
         let size: usize = (data.len() - offset).min(MAX_DATA_SIZE);
@@ -29,14 +29,12 @@ pub async fn transmit_concurrently(
 
     for (index, offset) in (0..data.len()).step_by(MAX_DATA_SIZE).enumerate() {
         let size: usize = (data.len() - offset).min(MAX_DATA_SIZE);
-        let mut data_slice = [0u8; MAX_DATA_SIZE];
-
-        data_slice[..size].copy_from_slice(&data[offset..(offset + size)]);
         let mut pack = PacketContainer::new_with_fixed_client_uid(total_packet_count, index as u16, client_tied_id);
         let sock_ref = Arc::clone(&socket);
         let sock_dest = Arc::clone(&destination);
+
+        pack.copy_data_to(&data[offset..(offset + size)]);
         let handle = runtime.spawn(async move {
-            pack.move_data_to(data_slice);
             transmit_packet(&pack, &sock_ref, &sock_dest).await;
         });
 
