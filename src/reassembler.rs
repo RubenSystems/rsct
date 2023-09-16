@@ -27,6 +27,19 @@ impl PacketStore {
         store
     }
 
+    pub fn new_preallocated(from: PacketContainer, buffer: Vec<u8>) -> PacketStore {
+        let mut store = PacketStore {
+            data: buffer,
+            from: from.from,
+            required_size: from.packet.header.total,
+            packet_count: 1,
+            copied_bytes: from.packet_data_size,
+        };
+        let offset = from.packet.header.index as usize * MAX_DATA_SIZE;
+        store.data[(offset)..(offset + MAX_DATA_SIZE)].copy_from_slice(&from.packet.data);
+        store
+    }
+
     pub fn add(&mut self, packet: PacketContainer) {
         self.packet_count += 1;
         self.copied_bytes += packet.packet_data_size;
@@ -71,7 +84,6 @@ impl Reassembler {
             ReassemblerResult::Complete(
                 packet_store.from,
                 packet_store.data[..packet_store.copied_bytes].to_vec(),
-                
             )
         } else {
             self.store.push(id, packet_store);
