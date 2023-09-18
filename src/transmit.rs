@@ -45,7 +45,6 @@ pub async fn transmit_concurrently(
     }
 }
 
-
 async fn transmit_packet(
     packet_container: &PacketContainer,
     socket: &UdpSocket,

@@ -1,4 +1,6 @@
 use crate::{
+    allocator::SimpleAllocator,
+    buffer_allocator::BufferAllocator,
     client::{self, Client},
     reassembler,
     recieve::recieve_once,
@@ -19,7 +21,16 @@ impl Server {
 
         Server {
             socket: Arc::new(socket),
-            reassembler: reassembler::Reassembler::new(),
+            reassembler: reassembler::Reassembler::new(Box::new(SimpleAllocator {})),
+        }
+    }
+
+    pub async fn new_with_buffer_allocator(ip: &str, port: &str, max_size: usize) -> Server {
+        let socket = UdpSocket::bind(format!("{}:{}", ip, port)).await.unwrap();
+
+        Server {
+            socket: Arc::new(socket),
+            reassembler: reassembler::Reassembler::new(Box::new(BufferAllocator::new(max_size))),
         }
     }
 }

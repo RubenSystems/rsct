@@ -1,3 +1,4 @@
+use crate::allocator::Allocator;
 use crate::client::Client;
 use crate::packet::{PacketContainer, MAX_DATA_SIZE};
 use lru::LruCache;
@@ -14,9 +15,9 @@ struct PacketStore {
 }
 
 impl PacketStore {
-    pub fn new(from: PacketContainer) -> PacketStore {
+    pub fn new(from: PacketContainer, buffer: Vec<u8>) -> PacketStore {
         let mut store = PacketStore {
-            data: vec![0; from.packet.header.total as usize * MAX_DATA_SIZE],
+            data: buffer,
             from: from.from,
             required_size: from.packet.header.total,
             packet_count: 1,
@@ -26,19 +27,6 @@ impl PacketStore {
         store.data[(offset)..(offset + MAX_DATA_SIZE)].copy_from_slice(&from.packet.data);
         store
     }
-
-    // pub fn new_preallocated(from: PacketContainer, buffer: Vec<u8>) -> PacketStore {
-    //     let mut store = PacketStore {
-    //         data: buffer,
-    //         from: from.from,
-    //         required_size: from.packet.header.total,
-    //         packet_count: 1,
-    //         copied_bytes: from.packet_data_size,
-    //     };
-    //     let offset = from.packet.header.index as usize * MAX_DATA_SIZE;
-    //     store.data[(offset)..(offset + MAX_DATA_SIZE)].copy_from_slice(&from.packet.data);
-    //     store
-    // }
 
     pub fn add(&mut self, packet: PacketContainer) {
         self.packet_count += 1;
@@ -54,6 +42,7 @@ impl PacketStore {
 
 pub struct Reassembler {
     store: LruCache<String, PacketStore>,
+    allocator: Box<dyn Allocator>,
 }
 
 pub enum ReassemblerResult {
@@ -62,9 +51,10 @@ pub enum ReassemblerResult {
 }
 
 impl Reassembler {
-    pub fn new() -> Reassembler {
+    pub fn new(allocator: Box<dyn Allocator>) -> Reassembler {
         Reassembler {
             store: LruCache::new(NonZeroUsize::new(REASSEMBLER_SIZE).unwrap()),
+            allocator,
         }
     }
 
@@ -76,7 +66,8 @@ impl Reassembler {
             pkt_store.add(packet);
             pkt_store
         } else {
-            PacketStore::new(packet)
+            let required_size = packet.packet.header.total as usize * MAX_DATA_SIZE;
+            PacketStore::new(packet, self.allocator.alloc(required_size))
         };
 
         if packet_store.is_complete() {
