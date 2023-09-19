@@ -40,9 +40,9 @@ impl PacketStore {
     }
 }
 
-pub struct Reassembler {
+pub struct Reassembler<T: Allocator> {
     store: LruCache<String, PacketStore>,
-    allocator: Box<dyn Allocator>,
+    allocator: T,
 }
 
 pub enum ReassemblerResult {
@@ -50,8 +50,8 @@ pub enum ReassemblerResult {
     Complete(Option<Client>, Vec<u8>),
 }
 
-impl Reassembler {
-    pub fn new(allocator: Box<dyn Allocator>) -> Reassembler {
+impl <T: Allocator> Reassembler<T> {
+    pub fn new(allocator: T) -> Reassembler<T> {
         Reassembler {
             store: LruCache::new(NonZeroUsize::new(REASSEMBLER_SIZE).unwrap()),
             allocator,

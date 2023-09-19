@@ -6,37 +6,30 @@ use crate::{
     recieve::recieve_once,
     transmit,
 };
+use crate::allocator::Allocator;
+
 use std::sync::Arc;
 use tokio::net::UdpSocket;
 
-pub struct Server {
+pub struct Server<T: Allocator> {
     socket: Arc<UdpSocket>,
-    reassembler: reassembler::Reassembler,
+    reassembler: reassembler::Reassembler<T>,
 }
 
 // Internals
-impl Server {
-    pub async fn new(ip: &str, port: &str) -> Server {
+impl<T: Allocator> Server<T> {
+    pub async fn new(ip: &str, port: &str, allocator: T) -> Server<T> {
         let socket = UdpSocket::bind(format!("{}:{}", ip, port)).await.unwrap();
 
-        Server {
+        Server::<T> {
             socket: Arc::new(socket),
-            reassembler: reassembler::Reassembler::new(Box::new(SimpleAllocator {})),
-        }
-    }
-
-    pub async fn new_with_buffer_allocator(ip: &str, port: &str, max_size: usize) -> Server {
-        let socket = UdpSocket::bind(format!("{}:{}", ip, port)).await.unwrap();
-
-        Server {
-            socket: Arc::new(socket),
-            reassembler: reassembler::Reassembler::new(Box::new(BufferAllocator::new(max_size))),
+            reassembler: reassembler::Reassembler::<T>::new(allocator),
         }
     }
 }
 
 // Transmitting
-impl Server {
+impl<T: Allocator> Server<T> {
     pub async fn transmit(&self, data: &[u8], dest: &client::Client) {
         transmit::transmit(data, &self.socket, &dest.address()).await;
     }
@@ -57,7 +50,7 @@ impl Server {
     }
 }
 
-impl Server {
+impl<T: Allocator> Server<T> {
     pub async fn recieve_once(&mut self) -> (Option<Client>, Vec<u8>) {
         loop {
             let packet = recieve_once(&self.socket).await;
