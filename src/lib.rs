@@ -1,5 +1,4 @@
-pub mod allocator;
-pub mod buffer_allocator;
+pub mod allocators;
 pub mod client;
 pub mod packet;
 pub mod reassembler;

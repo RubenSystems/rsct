@@ -1,26 +1,25 @@
-use crate::allocator::Allocator;
+use crate::allocators::allocator::Allocator;
 use std::collections::VecDeque;
 
-pub struct BufferAllocator {
+pub struct BufferPoolAllocator {
     buffers: VecDeque<Vec<u8>>,
     buffer_size: usize,
 }
 
-impl BufferAllocator {
+impl BufferPoolAllocator {
     pub fn new(buffer_size: usize) -> Self {
-        BufferAllocator {
+        BufferPoolAllocator {
             buffers: VecDeque::new(),
             buffer_size,
         }
     }
 }
 
-impl Allocator for BufferAllocator {
+impl Allocator for BufferPoolAllocator {
     fn alloc(&mut self, _: usize) -> Vec<u8> {
         if let Some(buffer) = self.buffers.pop_front() {
             buffer
         } else {
-            println!("ALLOC");
             vec![0_u8; self.buffer_size]
         }
     }

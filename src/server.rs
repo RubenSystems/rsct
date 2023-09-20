@@ -1,10 +1,10 @@
+use crate::allocators::allocator::Allocator;
 use crate::{
     client::{self, Client},
     reassembler,
     recieve::recieve_once,
     transmit,
 };
-use crate::allocator::Allocator;
 
 use std::sync::Arc;
 use tokio::net::UdpSocket;

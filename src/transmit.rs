@@ -24,7 +24,7 @@ pub async fn transmit_concurrently(
     destination: Arc<SocketAddr>,
     runtime: &tokio::runtime::Runtime,
 ) {
-    // let mut handles = Vec::new();
+    let mut handles = Vec::new();
     let total_packet_count = (data.len() / MAX_DATA_SIZE) as u16 + 1;
     let client_tied_id = generate_client_tied_uid();
 
@@ -39,10 +39,11 @@ pub async fn transmit_concurrently(
         let sock_dest = Arc::clone(&destination);
 
         pack.copy_data_to(&data[offset..(offset + size)]);
-        let _ = runtime.spawn(async move {
+        handles.push(runtime.spawn(async move {
             transmit_packet(&pack, &sock_ref, &sock_dest).await;
-        });
+        }));
     }
+    
 }
 
 async fn transmit_packet(

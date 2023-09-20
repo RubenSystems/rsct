@@ -1,4 +1,4 @@
-use crate::allocator::Allocator;
+use crate::allocators::allocator::Allocator;
 use crate::client::Client;
 use crate::packet::{PacketContainer, MAX_DATA_SIZE};
 use lru::LruCache;
@@ -50,7 +50,7 @@ pub enum ReassemblerResult {
     Complete(Option<Client>, Vec<u8>),
 }
 
-impl <T: Allocator> Reassembler<T> {
+impl<T: Allocator> Reassembler<T> {
     pub fn new(allocator: T) -> Reassembler<T> {
         Reassembler {
             store: LruCache::new(NonZeroUsize::new(REASSEMBLER_SIZE).unwrap()),
