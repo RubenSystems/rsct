@@ -1,6 +1,4 @@
 use crate::{
-    allocator::SimpleAllocator,
-    buffer_allocator::BufferAllocator,
     client::{self, Client},
     reassembler,
     recieve::recieve_once,
