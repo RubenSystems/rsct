@@ -1,4 +1,4 @@
-use crate::allocators::allocator::Allocator; 
+use crate::allocators::allocator::Allocator;
 
 pub struct BasicAllocator;
 
