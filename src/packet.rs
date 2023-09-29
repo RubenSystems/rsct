@@ -34,11 +34,8 @@ pub fn generate_client_tied_uid() -> u8 {
 }
 
 impl PacketContainer {
-    pub fn new(total_packet_count: u16) -> Self {
-        Self::new_with_fixed_client_uid(total_packet_count, 0, generate_client_tied_uid())
-    }
 
-    pub fn new_with_fixed_client_uid(
+    pub fn new(
         total_packet_count: u16,
         index: u16,
         client_tied_id: u8,

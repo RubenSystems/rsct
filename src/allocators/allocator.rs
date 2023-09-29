@@ -3,4 +3,3 @@ pub trait Allocator: Send {
 
     fn free(&mut self, buffer: Vec<u8>);
 }
-
