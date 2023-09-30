@@ -60,7 +60,6 @@ impl<T: Allocator> Reassembler<T> {
 
     pub fn add(&mut self, packet: PacketContainer) -> ReassemblerResult {
         let id = packet.informal_id();
-
         let packet_store = if let Some(pkt_store) = self.store.pop(&id) {
             let mut pkt_store = pkt_store;
             pkt_store.add(packet);
