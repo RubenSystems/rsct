@@ -6,11 +6,10 @@ use std::sync::Arc;
 use tokio::net::UdpSocket;
 
 pub async fn transmit(data: &[u8], socket: &UdpSocket, destination: &SocketAddr) {
-    
     let client_tied_id = generate_client_tied_uid();
-    
+
     let mut pack = PacketContainer::new((data.len() / MAX_DATA_SIZE) as u16 + 1, 0, client_tied_id);
-    
+
     for offset in (0..data.len()).step_by(MAX_DATA_SIZE) {
         let size: usize = (data.len() - offset).min(MAX_DATA_SIZE);
         pack.copy_data_to(&data[offset..(offset + size)]);
@@ -31,11 +30,7 @@ pub async fn transmit_concurrently(
     for (index, offset) in (0..data.len()).step_by(MAX_DATA_SIZE).enumerate() {
         let size: usize = (data.len() - offset).min(MAX_DATA_SIZE);
 
-        let mut pack = PacketContainer::new(
-            total_packet_count,
-            index as u16,
-            client_tied_id,
-        );
+        let mut pack = PacketContainer::new(total_packet_count, index as u16, client_tied_id);
         pack.copy_data_to(&data[offset..(offset + size)]);
 
         let sock_ref = Arc::clone(&socket);

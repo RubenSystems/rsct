@@ -34,12 +34,7 @@ pub fn generate_client_tied_uid() -> u8 {
 }
 
 impl PacketContainer {
-
-    pub fn new(
-        total_packet_count: u16,
-        index: u16,
-        client_tied_id: u8,
-    ) -> Self {
+    pub fn new(total_packet_count: u16, index: u16, client_tied_id: u8) -> Self {
         PacketContainer {
             packet: Packet {
                 header: PacketHeader {
