@@ -13,7 +13,9 @@ pub async fn transmit(data: &[u8], socket: &UdpSocket, destination: &SocketAddr)
     for offset in (0..data.len()).step_by(MAX_DATA_SIZE) {
         let size: usize = (data.len() - offset).min(MAX_DATA_SIZE);
         pack.copy_data_to(&data[offset..(offset + size)]);
+        
         transmit_packet(&pack, socket, destination).await;
+        
         pack.next();
     }
 }
