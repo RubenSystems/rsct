@@ -1,7 +1,7 @@
 use crate::{
     client::{Client},
     packet::PacketContainer,
-    recieve::recieve_once,
+    recieve::{recieve_once, RecieveError},
     transmit,
 };
 use tokio::net::UdpSocket;
@@ -29,7 +29,7 @@ impl Server {
 }
 
 impl Server {
-    pub async fn recieve_once(&self) -> PacketContainer {
-        recieve_once(&self.socket).await
+    pub async fn recieve_once(&self, timeout_millis: u64) -> Result<PacketContainer, RecieveError> {
+        recieve_once(&self.socket, timeout_millis).await
     }
 }
