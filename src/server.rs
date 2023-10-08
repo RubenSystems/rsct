@@ -29,7 +29,7 @@ impl Server {
 }
 
 impl Server {
-    pub async fn recieve_once(&self, timeout_millis: u64) -> Result<PacketContainer, RecieveError> {
-        recieve_once(&self.socket, timeout_millis).await
+    pub async fn recieve_once(&self) -> Result<PacketContainer, RecieveError> {
+        recieve_once(&self.socket).await
     }
 }
