@@ -4,7 +4,7 @@ use crate::{
     recieve::{recieve_once, RecieveError},
     transmit,
 };
-use tokio::net::UdpSocket;
+use std::net::UdpSocket;
 
 pub struct Server {
     socket: UdpSocket,
@@ -12,8 +12,8 @@ pub struct Server {
 
 // Internals
 impl Server {
-    pub async fn new(ip: &str, port: &str) -> Server {
-        let socket = UdpSocket::bind(format!("{}:{}", ip, port)).await.unwrap();
+    pub fn new(ip: &str, port: &str) -> Server {
+        let socket = UdpSocket::bind(format!("{}:{}", ip, port)).unwrap();
 
         Server {
             socket: socket,
@@ -23,13 +23,13 @@ impl Server {
 
 // Transmitting
 impl Server {
-    pub async fn transmit(&self, data: &[u8], dest: &Client) {
-        transmit::transmit(data, &self.socket, &dest.address()).await;
+    pub fn transmit(&self, data: &[u8], dest: &Client) {
+        transmit::transmit(data, &self.socket, &dest.address());
     }
 }
 
 impl Server {
-    pub async fn recieve_once(&self) -> Result<PacketContainer, RecieveError> {
-        recieve_once(&self.socket).await
+    pub fn recieve_once(&self) -> Result<PacketContainer, RecieveError> {
+        recieve_once(&self.socket)
     }
 }
